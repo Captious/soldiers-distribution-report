@@ -141,10 +141,14 @@ export default function Report() {
         }
     }
 
-    async function generateFirstReport() {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Додаток 4", {
-            views: [{style: "pageBreakPreview", zoomScale: 80}],
+    function createWorksheet(
+        workbook: ExcelJS.Workbook,
+        name: string,
+        columns: { key: string; width: number }[],
+        pageSetupOverrides?: Partial<ExcelJS.PageSetup>
+    ) {
+        const worksheet = workbook.addWorksheet(name, {
+            views: [{ style: "pageBreakPreview", zoomScale: 80 }],
         });
         worksheet.pageSetup = {
             paperSize: 9,
@@ -155,13 +159,40 @@ export default function Report() {
             margins: {
                 left: 0.5,
                 right: 0.5,
-                top: 1,
+                top: 0.5,
                 bottom: 0.5,
                 header: 0.3,
                 footer: 0.3,
             },
+            ...pageSetupOverrides,
         };
-        worksheet.columns = [
+        worksheet.columns = columns;
+        worksheet.columns.forEach((col) => {
+            col.font = { name: "Times New Roman", size: 14 };
+        });
+        return worksheet;
+    }
+
+    function addHeaderRow(worksheet: ExcelJS.Worksheet, headers: Header[]) {
+        const row = worksheet.addRow({});
+        row.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+        headers.forEach((header) => {
+            row.getCell(header.name).value = header.value;
+        });
+        row.eachCell((cell) => {
+            cell.border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+            };
+        });
+        return row;
+    }
+
+    async function generateFirstReport() {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = createWorksheet(workbook, "Додаток 4", [
             {key: "index", width: 5.89},
             {key: "rank", width: 13.78},
             {key: "name", width: 43.44},
@@ -171,10 +202,7 @@ export default function Report() {
             {key: "mobilizationUnit", width: 30.78},
             {key: "note", width: 26.22},
             {key: "signature", width: 21.89},
-        ];
-        worksheet.columns.forEach((col) => {
-            col.font = {name: "Times New Roman", size: 14};
-        });
+        ]);
         let documentTitleNameRow = worksheet.addRow({
             signature: "Додаток 1"
         });
@@ -237,23 +265,7 @@ export default function Report() {
         const totalWidth = worksheet.columns.slice(0, 9).reduce((sum, col) => sum + (col.width || 10), 0);
         documentDescriptionRow.height = calculateMergedRowHeight(description, totalWidth);
         worksheet.addRow({});
-        let headerRow = worksheet.addRow({});
-        headerRow.alignment = {
-            horizontal: "center",
-            vertical: "middle",
-            wrapText: true
-        };
-        report1DestinationColumns.forEach(header => {
-            headerRow.getCell(header.name).value = header.value;
-        });
-        headerRow.eachCell((cell) => {
-            cell.border = {
-                top: {style: 'thin'},
-                left: {style: 'thin'},
-                bottom: {style: 'thin'},
-                right: {style: 'thin'}
-            };
-        });
+        addHeaderRow(worksheet, report1DestinationColumns);
         data.forEach((row) => {
             let dataRow = worksheet.addRow({
                 index: row.index,
@@ -329,25 +341,7 @@ export default function Report() {
 
     async function generateSecondReport(isCopy: boolean) {
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Додаток 4", {
-            views: [{style: "pageBreakPreview", zoomScale: 80}],
-        });
-        worksheet.pageSetup = {
-            paperSize: 9,
-            orientation: "landscape",
-            fitToPage: true,
-            fitToWidth: 1,
-            fitToHeight: 0,
-            margins: {
-                left: 0.3,
-                right: 0.3,
-                top: 0.3,
-                bottom: 0.3,
-                header: 0.3,
-                footer: 0.3,
-            },
-        };
-        worksheet.columns = [
+        const worksheet = createWorksheet(workbook, "Додаток 4", [
             {key: "index", width: 5.89},
             {key: "rank", width: 20.33},
             {key: "name", width: 54.78},
@@ -358,9 +352,15 @@ export default function Report() {
             {key: "mobilizationUnit", width: 30.78},
             {key: "assessment", width: 27.12},
             {key: "note", width: 19.0},
-        ];
-        worksheet.columns.forEach((col) => {
-            col.font = {name: "Times New Roman", size: 14};
+        ], {
+            margins: {
+                left: 0.3,
+                right: 0.3,
+                top: 0.3,
+                bottom: 0.3,
+                header: 0.3,
+                footer: 0.3,
+            }
         });
         let documentTitleNameRow = worksheet.addRow({
             assessment: isCopy ? "Примірник 2" : "Додаток 1"
@@ -424,16 +424,15 @@ export default function Report() {
         const totalWidth = worksheet.columns.slice(0, 10).reduce((sum, col) => sum + (col.width || 10), 0);
         documentDescriptionRow.height = calculateMergedRowHeight(description, totalWidth);
         worksheet.addRow({});
-        let headerRow = worksheet.addRow({});
-        headerRow.alignment = {
-            horizontal: "center",
-            vertical: "middle",
-            wrapText: true
-        };
-        report2DestinationColumns.forEach(header => {
-            headerRow.getCell(header.name).value = header.value;
+        addHeaderRow(worksheet, report2DestinationColumns);
+        let destinationMilitaryUnitRow = worksheet.addRow({
+            index: destinationMilitaryUnit
         });
-        headerRow.eachCell((cell) => {
+        destinationMilitaryUnitRow.alignment = {
+            horizontal: "center"
+        }
+        worksheet.mergeCells(destinationMilitaryUnitRow.number, 1, destinationMilitaryUnitRow.number, 10);
+        destinationMilitaryUnitRow.eachCell((cell) => {
             cell.border = {
                 top: {style: 'thin'},
                 left: {style: 'thin'},
@@ -568,7 +567,7 @@ export default function Report() {
         worksheet.mergeCells(signature12Row.number, 4, signature12Row.number, 5);
         worksheet.addRow({})
         let signature13Row = worksheet.addRow({
-            rank: "Ознайомлення з Актом представника військової частини А7384",
+            rank: "Ознайомлення з Актом представника військової частини " + destinationMilitaryUnit,
             birthday: "_______________________",
             medicalCommission: distributionResponsiblePersonName
         });
