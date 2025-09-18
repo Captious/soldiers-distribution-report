@@ -1,12 +1,12 @@
 "use client";
 
 import {useState} from "react";
-import ExcelJS, {Cell} from "exceljs";
+import ExcelJS from "exceljs";
 import {saveAs} from "file-saver";
 import JSZip from "jszip";
 
 interface RowData {
-    [key: string]: any;
+    [key: string]: ExcelJS.CellValue;
 
     __toggle?: boolean;
     __note?: string;
@@ -134,7 +134,7 @@ export default function Report() {
         return lines * (fontSize + 2);
     };
 
-    function setCellCenterAlignment(cell: Cell) {
+    function setCellCenterAlignment(cell: ExcelJS.Cell) {
         cell.alignment = {
             ...(cell.alignment || {}),
             horizontal: "center"
@@ -203,7 +203,7 @@ export default function Report() {
             {key: "note", width: 26.22},
             {key: "signature", width: 21.89},
         ]);
-        let documentTitleNameRow = worksheet.addRow({
+        const documentTitleNameRow = worksheet.addRow({
             signature: "Додаток 1"
         });
         documentTitleNameRow.getCell("signature").alignment = {horizontal: "right"};
@@ -214,7 +214,7 @@ export default function Report() {
             mobilizationUnit: "Командир військової частини А4152"
         });
         worksheet.mergeCells(3, 7, 3, 9);
-        let commanderRankAndName = worksheet.addRow({
+        const commanderRankAndName = worksheet.addRow({
             mobilizationUnit: "полковник",
             note: "Вадим ГАЙДЕЙ"
         });
@@ -224,10 +224,10 @@ export default function Report() {
         });
         worksheet.mergeCells(5, 7, 5, 9);
         worksheet.addRow({});
-        let documentNameRow = worksheet.addRow({
+        const documentNameRow = worksheet.addRow({
             index: "АКТ"
         });
-        let documentNameRowCell = documentNameRow.getCell("index");
+        const documentNameRowCell = documentNameRow.getCell("index");
         documentNameRowCell.alignment = {
             horizontal: "center"
         };
@@ -241,7 +241,7 @@ export default function Report() {
         description += ",\nвідповідно до розпорядження Генерального штабу ЗС України від ";
         let formattedDistributionOrderDate;
         if (distributionOrderDate) {
-            let distributionOrderDateObj = new Date(distributionOrderDate);
+            const distributionOrderDateObj = new Date(distributionOrderDate);
             formattedDistributionOrderDate = distributionOrderDateObj.toLocaleDateString('uk-UA', {
                 day: "2-digit",
                 month: "long",
@@ -253,7 +253,7 @@ export default function Report() {
         description += formattedDistributionOrderDate;
         description += " ";
         description += distributionOrderNumber;
-        let documentDescriptionRow = worksheet.addRow({
+        const documentDescriptionRow = worksheet.addRow({
             index: description
         });
         documentDescriptionRow.alignment = {
@@ -267,7 +267,7 @@ export default function Report() {
         worksheet.addRow({});
         addHeaderRow(worksheet, report1DestinationColumns);
         data.forEach((row) => {
-            let dataRow = worksheet.addRow({
+            const dataRow = worksheet.addRow({
                 index: row.index,
                 rank: row.rank,
                 name: row.name,
@@ -297,16 +297,16 @@ export default function Report() {
         });
         worksheet.addRow({});
         worksheet.addRow({});
-        let totalCountRow = worksheet.addRow({
+        const totalCountRow = worksheet.addRow({
             index: "Представлено для вивчення (огляду) " + data.length + " військовослужбовців"
         });
         worksheet.mergeCells(totalCountRow.number, 1, totalCountRow.number, 9);
-        let selectedCountRow = worksheet.addRow({
+        const selectedCountRow = worksheet.addRow({
             index: "Відібрано " + data.filter(row => row.__toggle).length + " військовослужбовців"
         });
         worksheet.mergeCells(selectedCountRow.number, 1, selectedCountRow.number, 9);
         worksheet.addRow({});
-        let responsiblePersonPositionRow = worksheet.addRow({
+        const responsiblePersonPositionRow = worksheet.addRow({
             rank: responsiblePersonPosition
         });
         worksheet.mergeCells(responsiblePersonPositionRow.number, 2, responsiblePersonPositionRow.number, 8);
@@ -314,17 +314,17 @@ export default function Report() {
             rank: responsiblePersonRank,
             note: responsiblePersonName
         });
-        let formattedTodayDate = new Date().toLocaleDateString('uk-UA', {
+        const formattedTodayDate = new Date().toLocaleDateString('uk-UA', {
             day: "2-digit",
             month: "long",
             year: "numeric"
         });
-        let responsiblePersonSignatureDate = worksheet.addRow({
+        const responsiblePersonSignatureDate = worksheet.addRow({
             rank: formattedTodayDate
         });
         worksheet.mergeCells(responsiblePersonSignatureDate.number, 2, responsiblePersonSignatureDate.number, 9);
         worksheet.addRow({});
-        let distributionResponsiblePersonPositionRow = worksheet.addRow({
+        const distributionResponsiblePersonPositionRow = worksheet.addRow({
             rank: distributionResponsiblePersonPosition
         });
         worksheet.mergeCells(distributionResponsiblePersonPositionRow.number, 2, distributionResponsiblePersonPositionRow.number, 8);
@@ -332,7 +332,7 @@ export default function Report() {
             rank: distributionResponsiblePersonRank,
             note: distributionResponsiblePersonName
         });
-        let distributionResponsiblePersonSignatureDate = worksheet.addRow({
+        const distributionResponsiblePersonSignatureDate = worksheet.addRow({
             rank: formattedTodayDate
         });
         worksheet.mergeCells(distributionResponsiblePersonSignatureDate.number, 2, distributionResponsiblePersonSignatureDate.number, 9);
@@ -362,7 +362,7 @@ export default function Report() {
                 footer: 0.3,
             }
         });
-        let documentTitleNameRow = worksheet.addRow({
+        const documentTitleNameRow = worksheet.addRow({
             assessment: isCopy ? "Примірник 2" : "Додаток 1"
         });
         documentTitleNameRow.getCell("assessment").alignment = {horizontal: "right"};
@@ -373,7 +373,7 @@ export default function Report() {
             mobilizationUnit: "Командир військової частини А4152"
         });
         worksheet.mergeCells(3, 8, 3, 10);
-        let commanderRankAndName = worksheet.addRow({
+        const commanderRankAndName = worksheet.addRow({
             mobilizationUnit: "полковник",
             assessment: "Вадим ГАЙДЕЙ"
         });
@@ -383,10 +383,10 @@ export default function Report() {
         });
         worksheet.mergeCells(5, 8, 5, 9);
         worksheet.addRow({});
-        let documentNameRow = worksheet.addRow({
+        const documentNameRow = worksheet.addRow({
             index: "АКТ"
         });
-        let documentNameRowCell = documentNameRow.getCell("index");
+        const documentNameRowCell = documentNameRow.getCell("index");
         documentNameRowCell.alignment = {
             horizontal: "center"
         };
@@ -400,7 +400,7 @@ export default function Report() {
         description += ",\nвідповідно до розпорядження Генерального штабу ЗС України від ";
         let formattedDistributionOrderDate;
         if (distributionOrderDate) {
-            let distributionOrderDateObj = new Date(distributionOrderDate);
+            const distributionOrderDateObj = new Date(distributionOrderDate);
             formattedDistributionOrderDate = distributionOrderDateObj.toLocaleDateString('uk-UA', {
                 day: "2-digit",
                 month: "long",
@@ -412,7 +412,7 @@ export default function Report() {
         description += formattedDistributionOrderDate;
         description += " ";
         description += distributionOrderNumber;
-        let documentDescriptionRow = worksheet.addRow({
+        const documentDescriptionRow = worksheet.addRow({
             index: description
         });
         documentDescriptionRow.alignment = {
@@ -425,7 +425,7 @@ export default function Report() {
         documentDescriptionRow.height = calculateMergedRowHeight(description, totalWidth);
         worksheet.addRow({});
         addHeaderRow(worksheet, report2DestinationColumns);
-        let destinationMilitaryUnitRow = worksheet.addRow({
+        const destinationMilitaryUnitRow = worksheet.addRow({
             index: destinationMilitaryUnit
         });
         destinationMilitaryUnitRow.alignment = {
@@ -441,7 +441,7 @@ export default function Report() {
             };
         });
         data.forEach((row) => {
-            let dataRow = worksheet.addRow({
+            const dataRow = worksheet.addRow({
                 index: row.index,
                 rank: row.rank,
                 name: row.name,
@@ -473,21 +473,21 @@ export default function Report() {
             });
         });
         worksheet.addRow({});
-        let totalCountRow = worksheet.addRow({
+        const totalCountRow = worksheet.addRow({
             index: "Підлягало для відбору",
             name: data.length + " військовослужбовців (службових документів на них)"
         });
         worksheet.mergeCells(totalCountRow.number, 1, totalCountRow.number, 2);
         worksheet.mergeCells(totalCountRow.number, 3, totalCountRow.number, 4);
         totalCountRow.getCell("name").alignment = {horizontal: "center", vertical: "middle"};
-        let selectedCountRow = worksheet.addRow({
+        const selectedCountRow = worksheet.addRow({
             index: "Відібрано",
             name: data.filter(row => row.__toggle).length + " військовослужбовців (службових документів на них)"
         });
         worksheet.mergeCells(selectedCountRow.number, 1, selectedCountRow.number, 2);
         worksheet.mergeCells(selectedCountRow.number, 3, selectedCountRow.number, 4);
         selectedCountRow.getCell("name").alignment = {horizontal: "center", vertical: "middle"};
-        let deniedCountRow = worksheet.addRow({
+        const deniedCountRow = worksheet.addRow({
             index: "Невідібрано",
             name: data.filter(row => !row.__toggle).length + " військовослужбовців (службових документів на них)"
         });
@@ -496,77 +496,77 @@ export default function Report() {
         deniedCountRow.getCell("name").alignment = {horizontal: "center", vertical: "middle"};
         deniedCountRow.addPageBreak();
         worksheet.addRow({});
-        let signature1Row = worksheet.addRow({
+        const signature1Row = worksheet.addRow({
             rank: "Старший комісії:",
             name: "полковник Дмитро ЛОСІНЕЦЬ",
             birthday: isCopy ? "ОП" : "_______________________"
         });
         signature1Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature1Row.number, 4, signature1Row.number, 5);
-        let signature2Row = worksheet.addRow({
+        const signature2Row = worksheet.addRow({
             birthday: "(підпис)"
         });
         signature2Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature2Row.number, 4, signature2Row.number, 5);
-        let signature3Row = worksheet.addRow({
+        const signature3Row = worksheet.addRow({
             rank: "Члени комісії:",
             name: "майор Сергій МАТВІЙЧУК",
             birthday: isCopy ? "ОП" : "_______________________"
         });
         signature3Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature3Row.number, 4, signature3Row.number, 5);
-        let signature4Row = worksheet.addRow({
+        const signature4Row = worksheet.addRow({
             birthday: "(підпис)"
         });
         signature4Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature4Row.number, 4, signature4Row.number, 5);
-        let signature5Row = worksheet.addRow({
+        const signature5Row = worksheet.addRow({
             name: "капітан м/с Арсен КОВАЛЬЧУК",
             birthday: isCopy ? "ОП" : "_______________________"
         });
         signature5Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature5Row.number, 4, signature5Row.number, 5);
-        let signature6Row = worksheet.addRow({
+        const signature6Row = worksheet.addRow({
             birthday: "(підпис)"
         });
         signature6Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature6Row.number, 4, signature6Row.number, 5);
-        let signature7Row = worksheet.addRow({
+        const signature7Row = worksheet.addRow({
             name: "старший лейтенант Андрій ШЕЛЕСТЮК",
             birthday: isCopy ? "ОП" : "_______________________"
         });
         signature7Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature7Row.number, 4, signature7Row.number, 5);
-        let signature8Row = worksheet.addRow({
+        const signature8Row = worksheet.addRow({
             birthday: "(підпис)"
         });
         signature8Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature8Row.number, 4, signature8Row.number, 5);
-        let signature9Row = worksheet.addRow({
+        const signature9Row = worksheet.addRow({
             name: "молодший лейтенант Володимир ФЕДІНЧИК",
             birthday: isCopy ? "ОП" : "_______________________"
         });
         signature9Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature9Row.number, 4, signature9Row.number, 5);
-        let signature10Row = worksheet.addRow({
+        const signature10Row = worksheet.addRow({
             birthday: "(підпис)"
         });
         signature10Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature10Row.number, 4, signature10Row.number, 5);
-        let signature11Row = worksheet.addRow({
+        const signature11Row = worksheet.addRow({
             rank: "Секретар комісії:",
             name: "майор Олег КОТИК",
             birthday: isCopy ? "ОП" : "_______________________"
         });
         signature11Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature11Row.number, 4, signature11Row.number, 5);
-        let signature12Row = worksheet.addRow({
+        const signature12Row = worksheet.addRow({
             birthday: "(підпис)"
         });
         signature12Row.getCell("birthday").alignment = {horizontal: "center"}
         worksheet.mergeCells(signature12Row.number, 4, signature12Row.number, 5);
         worksheet.addRow({})
-        let signature13Row = worksheet.addRow({
+        const signature13Row = worksheet.addRow({
             rank: "Ознайомлення з Актом представника військової частини " + destinationMilitaryUnit,
             birthday: "_______________________",
             medicalCommission: distributionResponsiblePersonName
@@ -575,7 +575,7 @@ export default function Report() {
         worksheet.mergeCells(signature13Row.number, 2, signature13Row.number, 3);
         worksheet.mergeCells(signature13Row.number, 4, signature13Row.number, 5);
         worksheet.mergeCells(signature13Row.number, 6, signature13Row.number, 7);
-        let signature14Row = worksheet.addRow({
+        const signature14Row = worksheet.addRow({
             birthday: "(підпис)"
         });
         signature14Row.getCell("birthday").alignment = {horizontal: "center"}
@@ -644,7 +644,7 @@ export default function Report() {
                                         key={col.name}
                                         className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
                                     >
-                                        {row[col.name]}
+                                        {String(row[col.name])}
                                     </td>
                                 ))}
 
@@ -773,7 +773,7 @@ export default function Report() {
                     <div>
                         <label htmlFor="responsibleName"
                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Ім'я та прізвище представника батальйону
+                            Ім&apos;я та прізвище представника батальйону
                         </label>
                         <input
                             type="text"
@@ -820,7 +820,7 @@ export default function Report() {
                     <div>
                         <label htmlFor="disctibutionName"
                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Ім'я та прізвище представника підрозділу
+                            Ім&apos;я та прізвище представника підрозділу
                         </label>
                         <input
                             type="text"
