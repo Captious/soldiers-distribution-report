@@ -1,7 +1,7 @@
 "use client";
 
 import {useState} from "react";
-import ExcelJS from "exceljs";
+import ExcelJS, {Cell} from "exceljs";
 import {saveAs} from "file-saver";
 import JSZip from "jszip";
 
@@ -107,9 +107,17 @@ export default function Report() {
 
     const handleToggle = (index: number) => {
         setData((prev) =>
-            prev.map((row, i) =>
-                i === index ? {...row, __toggle: !row.__toggle} : row
-            )
+            prev.map((row, i) => {
+                if (i === index) {
+                    const newToggle = !row.__toggle;
+                    return {
+                        ...row,
+                        __toggle: newToggle,
+                        __note: newToggle ? "Відібраний" : ""
+                    };
+                }
+                return row;
+            })
         );
     };
 
@@ -125,6 +133,13 @@ export default function Report() {
         const lines = text.split("\n").reduce((acc, line) => acc + Math.ceil(line.length / approxCharPerLine), 0);
         return lines * (fontSize + 2);
     };
+
+    function setCellCenterAlignment(cell: Cell) {
+        cell.alignment = {
+            ...(cell.alignment || {}),
+            horizontal: "center"
+        }
+    }
 
     async function generateFirstReport() {
         const workbook = new ExcelJS.Workbook();
@@ -252,10 +267,13 @@ export default function Report() {
                 signature: ""
             });
             dataRow.alignment = {
-                horizontal: "justify",
                 vertical: "middle",
                 wrapText: true
             };
+            setCellCenterAlignment(dataRow.getCell("index"));
+            setCellCenterAlignment(dataRow.getCell("birthday"));
+            setCellCenterAlignment(dataRow.getCell("age"));
+            setCellCenterAlignment(dataRow.getCell("note"));
             dataRow.eachCell((cell) => {
                 cell.border = {
                     top: {style: 'thin'},
@@ -437,10 +455,15 @@ export default function Report() {
                 note: row.__toggle ? "" : row.__note
             });
             dataRow.alignment = {
-                horizontal: "justify",
                 vertical: "middle",
                 wrapText: true
             };
+            setCellCenterAlignment(dataRow.getCell("index"));
+            setCellCenterAlignment(dataRow.getCell("birthday"));
+            setCellCenterAlignment(dataRow.getCell("age"));
+            setCellCenterAlignment(dataRow.getCell("mps"));
+            setCellCenterAlignment(dataRow.getCell("assessment"));
+            setCellCenterAlignment(dataRow.getCell("note"));
             dataRow.eachCell((cell) => {
                 cell.border = {
                     top: {style: 'thin'},
