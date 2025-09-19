@@ -2,7 +2,7 @@ FROM node:24
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 
 RUN npm install -g pnpm && pnpm install --force
 
