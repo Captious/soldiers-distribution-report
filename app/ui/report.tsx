@@ -4,6 +4,20 @@ import {useState} from "react";
 import ExcelJS from "exceljs";
 import {saveAs} from "file-saver";
 import JSZip from "jszip";
+import {
+    AlignmentType,
+    Document,
+    ISectionPropertiesOptions,
+    IStylesOptions,
+    ITableBordersOptions,
+    Packer,
+    Paragraph,
+    Table,
+    TableCell,
+    TableRow,
+    TextRun,
+    WidthType
+} from "docx";
 
 interface RowData {
     [key: string]: ExcelJS.CellValue;
@@ -69,6 +83,44 @@ export default function Report() {
         {name: "assessment", value: "Оцінка відповідності", __cell_index: 9},
         {name: "note", value: "Причини відмови", __cell_index: 10}
     ];
+
+    const reportWordPageWidth = 11889;
+    const reportWordLeftMargin = 1701;
+    const reportWordRightMargin = 567;
+    const reportWordAvailableWidth = reportWordPageWidth - reportWordLeftMargin - reportWordRightMargin;
+    const reportWordSignatureColumnWidth = reportWordAvailableWidth * 0.5;
+    const reportWordDefaultStyle: IStylesOptions = {
+        default: {
+            document: {
+                run: {
+                    font: "Times New Roman",
+                    size: 28, // 14pt
+                },
+                paragraph: {
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: {line: 240}, // 1.0 line spacing
+                },
+            },
+        },
+    }
+    const reportWordSectionProperties: ISectionPropertiesOptions = {
+        page: {
+            margin: {
+                top: 567,     // 1 cm
+                bottom: 1134, // 2 cm
+                left: reportWordLeftMargin,   // 3 cm
+                right: reportWordRightMargin,   // 1 cm
+            }
+        }
+    }
+    const reportWordNoTableBorders: ITableBordersOptions = {
+        top: {style: "none"},
+        bottom: {style: "none"},
+        left: {style: "none"},
+        right: {style: "none"},
+        insideHorizontal: {style: "none"},
+        insideVertical: {style: "none"},
+    }
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -148,7 +200,7 @@ export default function Report() {
         pageSetupOverrides?: Partial<ExcelJS.PageSetup>
     ) {
         const worksheet = workbook.addWorksheet(name, {
-            views: [{ style: "pageBreakPreview", zoomScale: 80 }],
+            views: [{style: "pageBreakPreview", zoomScale: 80}],
         });
         worksheet.pageSetup = {
             paperSize: 9,
@@ -168,23 +220,23 @@ export default function Report() {
         };
         worksheet.columns = columns;
         worksheet.columns.forEach((col) => {
-            col.font = { name: "Times New Roman", size: 14 };
+            col.font = {name: "Times New Roman", size: 14};
         });
         return worksheet;
     }
 
     function addHeaderRow(worksheet: ExcelJS.Worksheet, headers: Header[]) {
         const row = worksheet.addRow({});
-        row.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+        row.alignment = {horizontal: "center", vertical: "middle", wrapText: true};
         headers.forEach((header) => {
             row.getCell(header.name).value = header.value;
         });
         row.eachCell((cell) => {
             cell.border = {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                bottom: { style: "thin" },
-                right: { style: "thin" },
+                top: {style: "thin"},
+                left: {style: "thin"},
+                bottom: {style: "thin"},
+                right: {style: "thin"},
             };
         });
         return row;
@@ -583,14 +635,162 @@ export default function Report() {
         return workbook.xlsx.writeBuffer();
     }
 
+    function createSignatureTableForReportWord(): Table {
+        return new Table({
+            width: {size: 100, type: WidthType.PERCENTAGE},
+            borders: reportWordNoTableBorders,
+            rows: [
+                new TableRow({
+                    children: [
+                        new TableCell({
+                            width: {size: reportWordSignatureColumnWidth, type: WidthType.DXA},
+                            children: [new Paragraph(distributionResponsiblePersonPosition)],
+                        }),
+                        new TableCell({
+                            width: {size: reportWordSignatureColumnWidth, type: WidthType.DXA},
+                            children: [new Paragraph("")],
+                        }),
+                    ],
+                }),
+                new TableRow({
+                    children: [
+                        new TableCell({
+                            children: [new Paragraph(distributionResponsiblePersonRank)],
+                        }),
+                        new TableCell({
+                            children: [new Paragraph({
+                                children: [
+                                    new TextRun(distributionResponsiblePersonName),
+                                ],
+                                alignment: AlignmentType.RIGHT
+                            })],
+                        }),
+                    ],
+                }),
+                new TableRow({
+                    children: [
+                        new TableCell({
+                            children: [new Paragraph(new Date().toLocaleDateString('uk-UA')),],
+                        }),
+                        new TableCell({
+                            children: [new Paragraph("")],
+                        }),
+                    ],
+                }),
+            ],
+        })
+    }
+
+    async function generateResultReportWord() {
+        const doc = new Document({
+            styles: reportWordDefaultStyle,
+            sections: [
+                {
+                    properties: reportWordSectionProperties,
+                    children: [
+                        new Paragraph({
+                            children: [
+                                new TextRun("Командиру військової частини А4152"),
+                            ],
+                            alignment: AlignmentType.RIGHT
+                        }),
+                        new Paragraph({}),
+                        new Paragraph({}),
+                        new Paragraph({
+                            children: [
+                                new TextRun("Рапорт")
+                            ],
+                            alignment: AlignmentType.CENTER
+                        }),
+                        new Paragraph({}),
+                        new Paragraph({
+                            indent: {firstLine: 851}, // 1.5 cm left indent
+                            children: [
+                                new TextRun("Дійсним доповідаю, що "),
+                                new TextRun(new Date().toLocaleDateString('uk-UA', {
+                                    day: "2-digit",
+                                    month: "long",
+                                    year: "numeric"
+                                })),
+                                new TextRun(", мною, представником військової частини "),
+                                new TextRun(destinationMilitaryUnit),
+                                new TextRun(", "),
+                                new TextRun(distributionResponsiblePersonPosition),
+                                new TextRun(" було проведено відбір серед курсантів військової частини А4152, які завершили програму базової загальновійськової підготовки. Всього було представлено до огляду "),
+                                new TextRun(String(data.length)),
+                                new TextRun(" курсантів, відібрано "),
+                                new TextRun(String(data.filter(row => row.__toggle).length)),
+                                new TextRun(" згідно акту, що долучається.")
+                            ]
+                        }),
+                        new Paragraph({}),
+                        createSignatureTableForReportWord(),
+                    ],
+                },
+            ],
+        });
+        return Packer.toBlob(doc);
+    }
+
+    async function generateEscortRefusalReportWord() {
+        const doc = new Document({
+            styles: reportWordDefaultStyle,
+            sections: [
+                {
+                    properties: reportWordSectionProperties,
+                    children: [
+                        new Paragraph({
+                            children: [
+                                new TextRun("Командиру військової частини А4152"),
+                            ],
+                            alignment: AlignmentType.RIGHT
+                        }),
+                        new Paragraph({}),
+                        new Paragraph({}),
+                        new Paragraph({
+                            children: [
+                                new TextRun("Рапорт")
+                            ],
+                            alignment: AlignmentType.CENTER
+                        }),
+                        new Paragraph({}),
+                        new Paragraph({
+                            indent: {firstLine: 851}, // 1.5 cm left indent
+                            children: [
+                                new TextRun("Я, представник військової частини "),
+                                new TextRun(destinationMilitaryUnit),
+                                new TextRun(", "),
+                                new TextRun(distributionResponsiblePersonPosition),
+                                new TextRun(", "),
+                                new TextRun(distributionResponsiblePersonRank),
+                                new TextRun(" "),
+                                new TextRun(distributionResponsiblePersonName),
+                                new TextRun(" прийняв особовий склад в кількості "),
+                                new TextRun(String(data.filter(row => row.__toggle).length)),
+                                new TextRun(" в/с. Претензій до навченості особового складу не маю. Відмовляюсь від супроводу та адаптації представниками військової частини А4152."),
+                            ]
+                        }),
+                        new Paragraph({}),
+                        createSignatureTableForReportWord(),
+                    ],
+                },
+            ],
+        });
+        return Packer.toBlob(doc);
+    }
+
     const handleDownload = async () => {
         const bufferFirstReport = await generateFirstReport();
         const bufferSecondReport = await generateSecondReport(false);
         const bufferSecondReportCopy = await generateSecondReport(true);
+        const resultReport = await generateResultReportWord();
+        const escortRefusalResultReport = await generateEscortRefusalReportWord();
         const zip = new JSZip();
-        zip.file("Додаток 1 до Алгоритму дій посадових осіб " + new Date().toLocaleDateString() + "(" + destinationMilitaryUnit + ")" + ".xlsx", bufferFirstReport);
-        zip.file("Додаток 1 " + new Date().toLocaleDateString() + "(" + destinationMilitaryUnit + ")" + ".xlsx", bufferSecondReport);
-        zip.file("Додаток 1 " + new Date().toLocaleDateString() + "(" + destinationMilitaryUnit + ") (примірник)" + ".xlsx", bufferSecondReportCopy);
+        zip.file("Додаток 1 до Алгоритму дій посадових осіб " + new Date().toLocaleDateString() + "(" + destinationMilitaryUnit + ").xlsx", bufferFirstReport);
+        zip.file("Додаток 1 " + new Date().toLocaleDateString() + "(" + destinationMilitaryUnit + ").xlsx", bufferSecondReport);
+        zip.file("Додаток 1 " + new Date().toLocaleDateString() + "(" + destinationMilitaryUnit + ") (примірник).xlsx", bufferSecondReportCopy);
+        zip.file("Доповідь про відбір " + new Date().toLocaleDateString() + "(" + destinationMilitaryUnit + ").docx", resultReport);
+        zip.file("Доповідь про відмову від супроводу " + new Date().toLocaleDateString() + "(" + destinationMilitaryUnit + ").docx", escortRefusalResultReport);
         const content = await zip.generateAsync({type: "blob"});
         saveAs(content, "Акти " + new Date().toLocaleDateString() + "(" + destinationMilitaryUnit + ").zip");
     };
