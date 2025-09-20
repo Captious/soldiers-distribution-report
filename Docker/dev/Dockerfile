@@ -8,7 +8,7 @@ RUN npm install -g pnpm && pnpm install --force
 
 COPY .. .
 
-RUN chmod +x *.sh
+RUN sed -i 's/\r$//' /app/*.sh && chmod +x /app/*.sh
 
 EXPOSE 3000
 
