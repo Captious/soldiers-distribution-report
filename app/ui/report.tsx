@@ -147,7 +147,14 @@ export default function Report() {
             }
             const obj: RowData = {};
             headers.forEach((header) => {
-                obj[header.name] = row.getCell(header.__cell_index).value;
+                if ("medicalCommission" === header.name &&
+                    (row.getCell(header.__cell_index)?.value === null
+                        || row.getCell(header.__cell_index)?.value === undefined
+                        || row.getCell(header.__cell_index)?.value === "")) {
+                    obj[header.name] = "Придатний до військової служби";
+                } else {
+                    obj[header.name] = row.getCell(header.__cell_index).value;
+                }
             });
             obj.__toggle = true;
             obj.__note = "Відібраний";
